@@ -10,6 +10,7 @@ namespace Collegemanagement.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class AdmissionController : ControllerBase
     {
         private readonly ILogger<AdmissionController> _logger; 
@@ -19,7 +20,7 @@ namespace Collegemanagement.Controllers
         {
             _logger = logger;
             admission = new AdmissionRepository(configuration);
-            admin= new AdminRepository(configuration);
+            //admin= new AdminRepository(configuration);
         }
         /// <summary>
         /// show our profile
@@ -47,59 +48,59 @@ namespace Collegemanagement.Controllers
         /// show Ug list form apply the course that page 
         /// </summary>
         /// <returns></returns>
-        [HttpGet]
-        [Route("UGList")]
-        public ActionResult UgProgram()
-        {
-            try
-            {
-                List<CourseModel> Courselist = admin.UgList();
-                return Ok(Courselist);
-            }
-            catch (Exception exception)
-            {
-                ErrorLog.LogError(exception);
-                return StatusCode(500, "Internal Server Error");
-            }
-        }
-        /// <summary>
-        /// show the PG list and apply button also there 
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        [Route("PGList")]
-        public ActionResult PgProgram()
-        {
-            try
-            {
-                List<CourseModel> Courselist = admin.PgProgram();
-                return Ok(Courselist);
-            }
-            catch (Exception exception)
-            {
-                ErrorLog.LogError(exception);
-                return StatusCode(500, "Internal Server Error");
-            }
-        }
-        /// <summary>
-        /// show the Pc program list
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        [Route("PCList")]
-        public ActionResult PcProgram()
-        {
-            try
-            {
-                List<CourseModel> Courselist = admin.PcProgram();
-                return Ok(Courselist);
-            }
-            catch (Exception exception)
-            {
-                ErrorLog.LogError(exception);
-                return StatusCode(500, "Internal Server Error");
-            }
-        }
+        //[HttpGet]
+        //[Route("UGList")]
+        //public ActionResult UgProgram()
+        //{
+        //    try
+        //    {
+        //        //List<CourseModel> Courselist = admin.UgList();
+        //        return Ok(Courselist);
+        //    }
+        //    catch (Exception exception)
+        //    {
+        //        ErrorLog.LogError(exception);
+        //        return StatusCode(500, "Internal Server Error");
+        //    }
+        //}
+        ///// <summary>
+        ///// show the PG list and apply button also there 
+        ///// </summary>
+        ///// <returns></returns>
+        //[HttpGet]
+        //[Route("PGList")]
+        //public ActionResult PgProgram()
+        //{
+        //    try
+        //    {
+        //        List<CourseModel> Courselist = admin.PgProgram();
+        //        return Ok(Courselist);
+        //    }
+        //    catch (Exception exception)
+        //    {
+        //        ErrorLog.LogError(exception);
+        //        return StatusCode(500, "Internal Server Error");
+        //    }
+        //}
+        ///// <summary>
+        ///// show the Pc program list
+        ///// </summary>
+        ///// <returns></returns>
+        //[HttpGet]
+        //[Route("PCList")]
+        //public ActionResult PcProgram()
+        //{
+        //    try
+        //    {
+        //        List<CourseModel> Courselist = admin.PcProgram();
+        //        return Ok(Courselist);
+        //    }
+        //    catch (Exception exception)
+        //    {
+        //        ErrorLog.LogError(exception);
+        //        return StatusCode(500, "Internal Server Error");
+        //    }
+        //}
         /// <summary>
         /// show the our status confirm or not like this
         /// </summary>

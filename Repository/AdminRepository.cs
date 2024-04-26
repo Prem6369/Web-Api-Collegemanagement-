@@ -1,174 +1,141 @@
 ﻿using Collegemanagement.Model;
+using Collegemanagement.Repository.Base;
+using Collegemanagement.Repository.Interface;
 using System.Data;
 using System.Data.SqlClient;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace Collegemanagement.Repository
 {
-    public class AdminRepository
+    public class AdminRepository :RepositoryBase
+
     {
         private IConfiguration _configuration;
         private SqlConnection connect;
 
-        public AdminRepository(IConfiguration configuration)
+        public AdminRepository(string connectionStrings) : base(connectionStrings)
         {
-            _configuration = configuration;
-            Connection();
+            
         }
 
         private void Connection()
         {
-            string connects = _configuration.GetConnectionString("connect");
-            connect = new SqlConnection(connects);
+            //string connects = _configuration.GetConnectionString("connect");
+            //connect = new SqlConnection(connects);
         }
         /// <summary>
         /// Add new Admin page logic
         /// </summary>
         /// <param name="admin"></param>
         /// <returns></returns>
-        public bool AddAdmin(AdminModel admin)
+        public async Task<String>  AddAdmin(AdminModel admin)
         {
-            try
+           String outMessage= null;
+            SqlParameter sqlParameter = new SqlParameter("@Message",SqlDbType.NVarChar,1000);
+            sqlParameter.Direction = ParameterDirection.Output;
+          
+            await ExecuteSP("[dbo].[SP_AddAdmin]", (SqlParameterCollection Parameters) =>
             {
-                Connection();
-                SqlCommand command = new SqlCommand("SP_CheckEmail", connect);
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("@Email", admin.Email);
-                connect.Open();
-                SqlDataReader reader = command.ExecuteReader();
-                if (reader.Read() == true)
-                {
-                    return false;
-                }
-                else
-                {
-                    Connection();
+          
+                Parameters.AddWithValue("@FirstName", admin.FirstName);
+                Parameters.AddWithValue("@LastName", admin.LastName);
+                Parameters.AddWithValue("@Gender", admin.Gender);
+                Parameters.AddWithValue("@PhoneNumber", admin.PhoneNumber);
+                Parameters.AddWithValue("@Address", admin.Address);
+                Parameters.AddWithValue("@Email", admin.Email);
+                Parameters.AddWithValue("@Password", Encrypt(admin.Password));
+                Parameters.Add(sqlParameter);   
+            });
+            outMessage = sqlParameter.Value.ToString();
 
-                    SqlCommand command1 = new SqlCommand("SP_AddAdmin", connect);
-                    command1.CommandType = CommandType.StoredProcedure;
-                    command1.Parameters.AddWithValue("Role", 2);
-                    command1.Parameters.AddWithValue("@FirstName", admin.FirstName);
-                    command1.Parameters.AddWithValue("@LastName", admin.LastName);
-                    command1.Parameters.AddWithValue("@Gender", admin.Gender);
-                    command1.Parameters.AddWithValue("@PhoneNumber", admin.PhoneNumber);
-                    command1.Parameters.AddWithValue("@Address", admin.Address);
-                    command1.Parameters.AddWithValue("@Email", admin.Email);
-                    command1.Parameters.AddWithValue("@Password", Encrypt(admin.Password));
 
-                    connect.Open();
 
-                    int i = command1.ExecuteNonQuery();
 
-                    if (i >= 1)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-            }
-            finally
-            {
-                connect.Close();
-            }
+            return outMessage;
+            //try
+            //{
+            //    Connection();
+            //    SqlCommand command = new SqlCommand("SP_CheckEmail", connect);
+            //    command.CommandType = CommandType.StoredProcedure;
+            //    command.Parameters.AddWithValue("@Email", admin.Email);
+            //    connect.Open();
+            //    SqlDataReader reader = command.ExecuteReader();
+            //    if (reader.Read() == true)
+            //    {
+            //        return false;
+            //    }
+            //    else
+            //    {
+            //        Connection();
+
+            //        SqlCommand command1 = new SqlCommand("SP_AddAdmin", connect);
+            //        command1.CommandType = CommandType.StoredProcedure;
+            //        command1.Parameters.AddWithValue("Role", 2);
+            //        command1.Parameters.AddWithValue("@FirstName", admin.FirstName);
+            //        command1.Parameters.AddWithValue("@LastName", admin.LastName);
+            //        command1.Parameters.AddWithValue("@Gender", admin.Gender);
+            //        command1.Parameters.AddWithValue("@PhoneNumber", admin.PhoneNumber);
+            //        command1.Parameters.AddWithValue("@Address", admin.Address);
+            //        command1.Parameters.AddWithValue("@Email", admin.Email);
+            //        command1.Parameters.AddWithValue("@Password", Encrypt(admin.Password));
+
+            //        connect.Open();
+
+            //        int i = command1.ExecuteNonQuery();
+
+            //        if (i >= 1)
+            //        {
+            //            return true;
+            //        }
+            //        else
+            //        {
+            //            return false;
+            //        }
+            //    }
+            //}
+            //finally
+            //{
+            //    connect.Close();
+            //}
 
         }
         /// <summary>
         /// show the admin list
         /// </summary>
         /// <returns></returns>
-        public List<RegisterModel> AdminList()
+        public async Task<List<RegisterModel>> AdminList()
         {
-            try
-            {
-                Connection();
-                connect.Open();
+           
 
-                List<RegisterModel> adminList = new List<RegisterModel>();
-
-                SqlCommand command = new SqlCommand("SP_AdminList", connect);
-                command.Parameters.AddWithValue("Role", 2);
-                command.CommandType = CommandType.StoredProcedure;
-
-                SqlDataAdapter adapter = new SqlDataAdapter(command);
-                DataTable dt = new DataTable();
-
-                adapter.Fill(dt);
-
-                foreach (DataRow list in dt.Rows)
+                var dataMapper = new CollectionDataMapper<RegisterModel>();
+                await ExecuteSP("[dbo].[SP_AdminList]", (SqlParameterCollection parameters) =>
                 {
-                    adminList.Add(
-                        new RegisterModel
-                        {
-                            Id = Convert.ToInt32(list["Id"]),
-                            FirstName = Convert.ToString(list["FirstName"]),
-                            LastName = Convert.ToString(list["LastName"]),
-                            Gender = Convert.ToString(list["Gender"]),
-                            PhoneNumber = Convert.ToString(list["PhoneNumber"]),
-                            Address = Convert.ToString(list["Address"]),
-                            Email = Convert.ToString(list["Email"]),
-                            Password = Convert.ToString(list["Password"]),
+                    parameters.AddWithValue("@Role", 2);
+                }, dataMapper);
 
-                        });
-                }
-                return adminList;
-            }
-            finally
-            {
-                connect.Close();
-            }
+               
+                var adminList = dataMapper.Data;
+                
+               return adminList;
+           
         }
         /// <summary>
         /// show the register people list
         /// </summary>
         /// <returns></returns>
-        public List<RegisterModel> RegisterList()
+        public async Task< List<RegisterModel>>RegisterList()
         {
-            try
+            var dataMapper = new CollectionDataMapper<RegisterModel>();
+            await ExecuteSP("[dbo].[SP_AdminList]", (SqlParameterCollection parameters) =>
             {
-                Connection();
-                connect.Open();
+                parameters.AddWithValue("@Role", 1);
+            }, dataMapper);
+            var UserList = dataMapper.Data;
+            return UserList;
 
-                List<RegisterModel> userList = new List<RegisterModel>();
-
-                SqlCommand command = new SqlCommand("SP_AdminList", connect);
-                command.Parameters.AddWithValue("Role", 1);
-                command.CommandType = CommandType.StoredProcedure;
-
-                SqlDataAdapter adapter = new SqlDataAdapter(command);
-                DataTable dt = new DataTable();
-
-                adapter.Fill(dt);
-
-                foreach (DataRow list in dt.Rows)
-                {
-                    userList.Add(
-                        new RegisterModel
-                        {
-                            Id = Convert.ToInt32(list["Id"]),
-                            FirstName = Convert.ToString(list["FirstName"]),
-                            LastName = Convert.ToString(list["LastName"]),
-                            Gender = Convert.ToString(list["Gender"]),
-                            DateOfBirth = Convert.ToDateTime(list["DateOfBirth"]),
-                            Age = Convert.ToInt32(list["Age"]),
-                            PhoneNumber = Convert.ToString(list["PhoneNumber"]),
-                            State = Convert.ToString(list["State"]),
-                            City = Convert.ToString(list["city"]),
-                            Address = Convert.ToString(list["Address"]),
-                            Email = Convert.ToString(list["Email"]),
-                            Password = Convert.ToString(list["Password"]),
-
-                        });
-                }
-                return userList;
-            }
-            finally
-            {
-                connect.Close();
-            }
+           
         }
         /// <summary>
         /// detele the admin 
@@ -367,132 +334,51 @@ namespace Collegemanagement.Repository
          /// show the ug list
          /// </summary>
          /// <returns></returns>
-        public List<CourseModel> UgList()
+        public async Task< List<CourseModel>> UgList()
         {
-            try
+
+
+            var dataMapper = new CollectionDataMapper<CourseModel>();
+            await ExecuteSP("[dbo].[SPS_Courseprogram]", (SqlParameterCollection parameters) =>
             {
-                Connection();
-                connect.Open();
-
-                List<CourseModel> courseList = new List<CourseModel>();
-
-                SqlCommand command = new SqlCommand("SPS_Courseprogram", connect);
-                command.Parameters.AddWithValue("@Program", "UG");
-                command.CommandType = CommandType.StoredProcedure;
-
-                SqlDataAdapter adapter = new SqlDataAdapter(command);
-                DataTable dt = new DataTable();
-
-                adapter.Fill(dt);
-
-                foreach (DataRow list in dt.Rows)
-                {
-                    courseList.Add(
-                        new CourseModel
-                        {
-                            ID = Convert.ToInt32(list["ID"]),
-                            Program = Convert.ToString(list["Program"]),
-                            Courseid = Convert.ToString(list["Courseid"]),
-                            Coursename = Convert.ToString(list["Coursename"]),
-                            Description = Convert.ToString(list["Description"]),
-                            Duration = Convert.ToString(list["Duration"]),
-                            Availablesheet = Convert.ToInt32(list["Availablesheet"])
-                        });
-                }
-                return courseList;
-            }
-            finally
-            {
-                connect.Close();
-            }
+                parameters.AddWithValue("@Program", "UG");
+            }, dataMapper);
+            var UGList = dataMapper.Data;
+            return UGList;
+            
         }
         /// <summary>
         /// show the PG program list
         /// </summary>
         /// <returns></returns>
-        public List<CourseModel> PgProgram()
+        public async Task< List<CourseModel>> PgProgram()
         {
-            try
+
+            var dataMapper = new CollectionDataMapper<CourseModel>();
+            await ExecuteSP("[dbo].[SPS_Courseprogram]", (SqlParameterCollection parameters) =>
             {
-                Connection();
-                connect.Open();
+                parameters.AddWithValue("@Program", "PG");
+            }, dataMapper);
+            var PGList = dataMapper.Data;
+            return PGList;
 
-                List<CourseModel> courseList = new List<CourseModel>();
-
-                SqlCommand cmd = new SqlCommand("SPS_Courseprogram", connect);
-                cmd.Parameters.AddWithValue("@Program", "PG");
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-                DataTable dt = new DataTable();
-
-                adapter.Fill(dt);
-
-
-                foreach (DataRow list in dt.Rows)
-                {
-                    courseList.Add(
-                        new CourseModel
-                        {
-                            ID = Convert.ToInt32(list["ID"]),
-                            Program = Convert.ToString(list["Program"]),
-                            Courseid = Convert.ToString(list["Courseid"]),
-                            Coursename = Convert.ToString(list["Coursename"]),
-                            Description = Convert.ToString(list["Description"]), // Change this to Convert.ToString
-                            Duration = Convert.ToString(list["Duration"]),
-                            Availablesheet = Convert.ToInt32(list["Availablesheet"])
-                        });
-                }
-                return courseList;
-            }
-            finally
-            {
-                connect.Close();
-            }
+          
         }
         /// <summary>
         /// return thr PC course list
         /// </summary>
         /// <returns></returns>
-        public List<CourseModel> PcProgram()
+        public async Task< List<CourseModel> > PcProgram()
         {
-            try
+
+            var dataMapper = new CollectionDataMapper<CourseModel>();
+            await ExecuteSP("[dbo].[SPS_Courseprogram]", (SqlParameterCollection parameters) =>
             {
-                Connection();
-                connect.Open();
-
-                List<CourseModel> courseList = new List<CourseModel>();
-
-                SqlCommand command = new SqlCommand("SPS_Courseprogram", connect);
-                command.Parameters.AddWithValue("@Program", "PC");
-                command.CommandType = CommandType.StoredProcedure;
-
-                SqlDataAdapter adapter = new SqlDataAdapter(command);
-                DataTable dt = new DataTable();
-
-                adapter.Fill(dt);
-
-
-                foreach (DataRow list in dt.Rows)
-                {
-                    courseList.Add(
-                        new CourseModel
-                        {
-                            ID = Convert.ToInt32(list["ID"]),
-                            Program = Convert.ToString(list["Program"]),
-                            Courseid = Convert.ToString(list["Courseid"]),
-                            Coursename = Convert.ToString(list["Coursename"]),
-                            Description = Convert.ToString(list["Description"]), // Change this to Convert.ToString
-                            Duration = Convert.ToString(list["Duration"]),
-                            Availablesheet = Convert.ToInt32(list["Availablesheet"])
-                        });
-                }
-                return courseList;
-            }
-            finally
-            {
-                connect.Close();
-            }
+                parameters.AddWithValue("@Program", "PC");
+            }, dataMapper);
+            var PCList = dataMapper.Data;
+            return PCList;
+            
         }
         /// <summary>
         /// delete the course by courseid
@@ -617,92 +503,32 @@ namespace Collegemanagement.Repository
         /// show the userdetails who are apply the course means show here
         /// </summary>
         /// <returns></returns>
-        public List<UserAdmissionModel> UserDetails()
+        public async Task< List<UserAdmissionModel>> UserDetails()
         {
-            try
+
+            var dataMapper = new CollectionDataMapper<UserAdmissionModel>();
+            await ExecuteSP("[dbo].[SP_FullUserDetails]", (SqlParameterCollection parameters) =>
             {
-                Connection();
-                connect.Open();
+               
+            }, dataMapper);
+            var UserDetails = dataMapper.Data;
+            return UserDetails;
 
-                List<UserAdmissionModel> userList = new List<UserAdmissionModel>();
-
-                SqlCommand cmd = new SqlCommand("SP_FullUserDetails", connect);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-                DataTable dt = new DataTable();
-
-                adapter.Fill(dt);
-
-
-                foreach (DataRow list in dt.Rows)
-                {
-                    userList.Add(
-                        new UserAdmissionModel
-                        {
-                            Program = Convert.ToString(list["Program"]),
-                            Courseid = Convert.ToString(list["Courseid"]),
-                            Coursename = Convert.ToString(list["Coursename"]),
-                            ID = Convert.ToInt32(list["ID"]),
-                            FirstName = Convert.ToString(list["FirstName"]),
-                            LastName = Convert.ToString(list["LastName"]),
-                            Gender = Convert.ToString(list["Gender"]),
-                            Email = Convert.ToString(list["Email"]),
-                            HighSchoolName = Convert.ToString(list["HighSchoolName"]),
-                            HighSchoolGroup = Convert.ToString(list["HighSchoolGroup"]),
-                            HighSchoolMark = Convert.ToInt32(list["HighSchoolMark"]),
-                            SecondarySchoolName = Convert.ToString(list["SecondarySchoolName"]),
-                            SecondarySchoolMark = Convert.ToInt32(list["SecondarySchoolMark"]),
-                            CommunityCertificate = (byte[])(list["CommunityCertificate"]),
-                            Photo = (byte[])(list["Photo"]),
-                            Status = Convert.ToInt32(list["Status"])
-
-                        });
-                }
-                return userList;
-            }
-            finally
-            {
-                connect.Close();
-            }
         }
         /// <summary>
         /// return the contact form list 
         /// </summary>
         /// <returns></returns>
-        public List<ContactModel> ContactForm()
+        public async Task<List<ContactModel>> ContactForm()
         {
-            try
+            var DataMapper = new CollectionDataMapper<ContactModel>();
+
+            await ExecuteSP("[dbo].[SP_Contactdetails]",(SqlParameterCollection parameters) =>
             {
-                Connection();
-                connect.Open();
-                List<ContactModel> contctList = new List<ContactModel>();
-                SqlCommand cmd = new SqlCommand("SP_Contactdetails", connect);
-                cmd.CommandType = CommandType.StoredProcedure;
-                SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-                DataTable dt = new DataTable();
-                adapter.Fill(dt);
 
-
-                foreach (DataRow row in dt.Rows)
-                {
-                    contctList.Add(new ContactModel
-                    {
-                        id = Convert.ToInt32(row["ID"]),
-                        Name = Convert.ToString(row["Fullname"]),
-                        Email = Convert.ToString(row["Email"]),
-                        Phonenumber = Convert.ToString(row["Phonenumber"]),
-                        Message = Convert.ToString(row["Message"])
-                    });
-                }
-                return contctList;
-            }
-            finally
-            {
-                connect.Close();
-            }
-
-
+            },DataMapper);
+            var ContactForm = DataMapper.Data;
+            return ContactForm;
         }
         /// <summary>
         /// Encrpt the password using AES algorithm

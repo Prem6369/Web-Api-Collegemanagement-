@@ -5,21 +5,24 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Collections.Generic;
+using Collegemanagement.Controllers.Base;
+using Microsoft.Extensions.Configuration;
 
 namespace Collegemanagement.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AdminController : ControllerBase
+    //[Authorize]
+    public class AdminController : RepositoryApiControllerBase<AdminRepository>
     {
 
         private readonly ILogger<HomeController> _logger;
         private readonly AdminRepository admin;
-
-        public AdminController(IConfiguration configuration)
+        private readonly IConfiguration _configuration;
+        public AdminController(IConfiguration configuration, AdminRepository adminRepository) : base(adminRepository)
         {
-
-            admin = new AdminRepository(configuration);
+            _configuration = configuration;
+            admin = adminRepository;
         }
 
         /// <summary>
@@ -29,24 +32,28 @@ namespace Collegemanagement.Controllers
         /// <returns>Success or error message.</returns>
         [HttpPost]
         [Route("Addadmin")]
-        public string AddNewAdmin(AdminModel adminObject)
+        public async Task<IActionResult> AddNewAdmin(AdminModel adminObject)
         {
-            try
-            {
-                if (admin.AddAdmin(adminObject))
-                {
-                    return "new admin added successfully";
-                }
-                else
-                {
-                    return "Email Already Taken Please Use Another Email";
-                }
-            }
-            catch (Exception exception)
-            {
-                ErrorLog.LogError(exception);
-                return "Internal Server Error";
-            }
+
+            var Reslut=await admin.AddAdmin(adminObject);
+
+            return Ok(Reslut);
+            //try
+            //{
+            //    if (admin.AddAdmin(adminObject))
+            //    {
+            //        return "new admin added successfully";
+            //    }
+            //    else
+            //    {
+            //        return "Email Already Taken Please Use Another Email";
+            //    }
+            //}
+            //catch (Exception exception)
+            //{
+            //    ErrorLog.LogError(exception);
+            //    return "Internal Server Error";
+            //}
 
         }
         /// <summary>
@@ -55,19 +62,10 @@ namespace Collegemanagement.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("adminList")]
-        public ActionResult AdminDetails()
+        public async Task<List<RegisterModel>> AdminDetails()
         {
-            try
-            {
-                List<RegisterModel> adminList = admin.AdminList();
-                return Ok(adminList);
-            }
-            catch (Exception exception)
-            {
-                ErrorLog.LogError(exception);
-                return BadRequest("Internal Server Error");
-            }
-
+               return await admin.AdminList(); 
+         
         }
         /// <summary>
         /// detele the admin using session
@@ -102,18 +100,11 @@ namespace Collegemanagement.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("Userdetails")]
-        public ActionResult UserDetails()
+        public async Task<List<UserAdmissionModel>>  UserDetails()
         {
-            try
-            {
-                List<UserAdmissionModel> userList = admin.UserDetails();
-                return Ok(userList);
-            }
-            catch (Exception exception)
-            {
-                ErrorLog.LogError(exception);
-                return BadRequest("Internal Server Error");
-            }
+
+            return await admin.UserDetails();
+            
         }
         /// <summary>
         /// admin can add the PG course
@@ -200,18 +191,10 @@ namespace Collegemanagement.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("ugList")]
-        public ActionResult UgProgram()
+        public async Task<List<CourseModel>> UgProgram()
         {
-            try
-            {
-                List<CourseModel> courseList = admin.UgList();
-                return Ok(courseList);
-            }
-            catch (Exception exception)
-            {
-                ErrorLog.LogError(exception);
-                return BadRequest("Internal Server Error");
-            }
+            return await admin.UgList();
+
         }
 
         /// <summary>
@@ -220,18 +203,12 @@ namespace Collegemanagement.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("pgList")]
-        public ActionResult PgProgram()
+        public async Task<List<CourseModel>> PgProgram()
         {
-            try
-            {
-                List<CourseModel> courseList = admin.PgProgram();
-                return Ok(courseList);
-            }
-            catch (Exception exception)
-            {
-                ErrorLog.LogError(exception);
-                return BadRequest("Internal Server Error");
-            }
+
+            return await admin.PgProgram();
+
+            
         }
         /// <summary>
         /// get the PC course list
@@ -239,18 +216,11 @@ namespace Collegemanagement.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("pcList")]
-        public ActionResult PcProgram()
+        public async Task<List<CourseModel>> PcProgram()
         {
-            try
-            {
-                List<CourseModel> courseList = admin.PcProgram();
-                return Ok(courseList);
-            }
-            catch (Exception exception)
-            {
-                ErrorLog.LogError(exception);
-                return BadRequest("Internal Server Error");
-            }
+            return await admin.PcProgram();
+
+           
         }
         /// <summary>
         /// delete ug course form admin
@@ -396,18 +366,11 @@ namespace Collegemanagement.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("Contactform")]
-        public ActionResult ContactDetails()
+        public async Task<List<ContactModel>> ContactDetails()
         {
-            try
-            {
-                List<ContactModel> contactList = admin.ContactForm();
-                return Ok(contactList);
-            }
-            catch (Exception exception)
-            {
-                ErrorLog.LogError(exception);
-                return BadRequest("Internal Server Error");
-            }
+
+            return await admin.ContactForm();
+            
         }
         /// <summary>
         /// register people are show here list
@@ -415,28 +378,21 @@ namespace Collegemanagement.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("registerList")]
-        public ActionResult Register()
+        public async Task<List<RegisterModel>> Register()
         {
-            try
-            {
-                List<RegisterModel> userlist = admin.RegisterList();
-                return Ok(userlist);
-            }
-            catch (Exception exception)
-            {
-                ErrorLog.LogError(exception);
-                return BadRequest("Internal Server Error");
-            }
+          
+                return await admin.RegisterList();
+
 
         }
 
-        /// <summary>
-        /// Get the status form admin and process that 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="Status"></param>
-        /// <returns></returns>
-        [HttpPost]
+            /// <summary>
+            /// Get the status form admin and process that 
+            /// </summary>
+            /// <param name="id"></param>
+            /// <param name="Status"></param>
+            /// <returns></returns>
+         [HttpPost]
         [Route("statusChange/{id}/{Status}")]
         public string Status(int id, int Status)
         {

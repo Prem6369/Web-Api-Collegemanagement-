@@ -1,8 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Collegemanagement.extension;
+using Collegemanagement.Repository.Interface;
+using System.ComponentModel.DataAnnotations;
+using System.Data;
+using System.Net;
 
 namespace Collegemanagement.Model
 {
-    public class UserAdmissionModel
+    public class UserAdmissionModel : IMapper
     {
         public string Program { get; set; }
         public string Courseid { get; set; }
@@ -32,5 +36,37 @@ namespace Collegemanagement.Model
         public byte[] CommunityCertificate { get; set; }
         public byte[] Photo { get; set; }
         public int Status { get; set; }
+
+
+
+
+        public void Map(IDataReader reader)
+        {
+            
+            if (reader.FieldCount > 0)
+            {
+                Program = reader.GetValue<string>("Program");
+                Courseid = reader.GetValue<string>("Courseid");
+                Coursename = reader.GetValue<string>("Coursename");
+                LastName = reader.GetValue<string>("LastName");
+                ID = reader.GetValue<int>("ID");
+                FirstName = reader.GetValue<string>("FirstName");
+                LastName = reader.GetValue<string>("LastName");
+                Gender = reader.GetValue<string>("Gender");
+                Email = reader.GetValue<string>("Email");
+                HighSchoolName = reader.GetValue<string>("HighSchoolName");
+                HighSchoolGroup = reader.GetValue<string>("HighSchoolGroup");
+                HighSchoolMark = reader.GetValue<int>("HighSchoolMark");
+                SecondarySchoolName = reader.GetValue<string>("SecondarySchoolName");
+                SecondarySchoolMark = reader.GetValue<int>("SecondarySchoolMark");
+                CommunityCertificate = reader.GetValue<byte[]>("CommunityCertificate");
+                Photo = reader.GetValue<byte[]>("Photo");
+                Status = reader.GetValue<int>("Status");
+            }
+
+
+        }
     }
+
+
 }

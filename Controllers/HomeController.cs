@@ -12,11 +12,13 @@ using Microsoft.AspNetCore.Identity;
 using System.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
 using System.Reflection.Metadata.Ecma335;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Collegemanagement.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+
     public class HomeController : ControllerBase
     {
         private readonly ILogger<HomeController> _logger;
