@@ -75,18 +75,18 @@ namespace Collegemanagement.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpDelete]
-        [Route("deleteAdmin/{id}")]
-        public string AdminDelete(int id)
+        [Route("deleteAdmin/{id}/{sessionid}")]
+        public string AdminDelete(int id,int sessionid)
         {
             try
             {
-                if (admin.DeleteAdmin(id))
+                if (admin.DeleteAdmin(id,sessionid))
                 {
                     return "delete";
                 }
                 else
                 {
-                    return "Internal Server Error";
+                    return "error";
                 }
               
             }

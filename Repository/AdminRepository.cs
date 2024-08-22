@@ -45,7 +45,7 @@ namespace Collegemanagement.Repository
                 {
                     Connection();
 
-                    SqlCommand command1 = new SqlCommand("SP_AddAdmin", connect);
+                    SqlCommand command1 = new SqlCommand("[SP_AddAdmin1]", connect);
                     command1.CommandType = CommandType.StoredProcedure;
                     command1.Parameters.AddWithValue("Role", 2);
                     command1.Parameters.AddWithValue("@FirstName", admin.FirstName);
@@ -175,28 +175,36 @@ namespace Collegemanagement.Repository
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public bool DeleteAdmin(int id)
+        public bool DeleteAdmin(int id,int sessionid)
         {
             try
             {
                 Connection();
                 connect.Open();
-                SqlCommand command = new SqlCommand("SP_DeleteAdmin", connect);
-                command.CommandType = CommandType.StoredProcedure;
-
-                command.Parameters.AddWithValue("@ID", id);
-
-
-                int i = command.ExecuteNonQuery();
-
-                if (i >= 1)
+                if (id!=sessionid)
                 {
-                    return true;
+                    SqlCommand command = new SqlCommand("SP_DeleteAdmin", connect);
+                    command.CommandType = CommandType.StoredProcedure;
+
+                    command.Parameters.AddWithValue("@ID", id);
+
+
+                    int i = command.ExecuteNonQuery();
+
+                    if (i >= 1)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
                 else
                 {
                     return false;
                 }
+               
             }
             finally
             {

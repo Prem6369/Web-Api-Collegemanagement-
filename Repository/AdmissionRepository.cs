@@ -47,7 +47,7 @@ namespace Collegemanagement.Repository
 
                         new UserAdmissionModel
                         {
-                            ID = Convert.ToInt32(dr["ID"]),
+                            ID = Convert.ToInt32(dr["id"]),
                             FirstName = Convert.ToString(dr["FirstName"]),
                             LastName = Convert.ToString(dr["LastName"]),
                             Gender = Convert.ToString(dr["Gender"]),
